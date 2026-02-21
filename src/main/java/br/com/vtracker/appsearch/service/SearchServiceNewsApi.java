@@ -1,26 +1,22 @@
 package br.com.vtracker.appsearch.service;
 
-import br.com.vtracker.appsearch.dto.ResultInfoDto;
-import com.google.gson.JsonObject;
+import br.com.vtracker.appsearch.dto.ArticlesDto;
+import br.com.vtracker.appsearch.dto.ErrorDto;
+import br.com.vtracker.appsearch.dto.ParamsDto;
+import br.com.vtracker.appsearch.dto.ResponseDto;
+import br.com.vtracker.appsearch.resource.NewsApiClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.format.datetime.DateFormatter;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class SearchServiceNewsApi implements ISearchService {
@@ -31,48 +27,60 @@ public class SearchServiceNewsApi implements ISearchService {
     @Value("${app.newsapi.apiKey}")
     private String apiKey;
 
-    private static String urlBase = "https://newsapi.org/v2/everything";
+    private static final DateTimeFormatter DATEFORMAT_PATTERN = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String SORT_BY  = "popularity";
+
+    private final NewsApiClient newsApiClient;
+    private final ObjectMapper mapper;
+
+    public SearchServiceNewsApi(NewsApiClient newsApiClient) {
+        this.newsApiClient = newsApiClient;
+        this.mapper = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     @Override
-    public ResultInfoDto searchAnySubject(String subject) {
-        Map<String, String> urlParam = new HashMap<>();
+    public ResponseDto searchAnySubject(ParamsDto params) {
+        LocalDate fromDate = params.startDate() != null ? params.startDate() : LocalDate.now().minusDays(daysFrom);
+        LocalDate toDate = params.endDate() != null ? params.endDate() : LocalDate.now();
 
-        LocalDate dateFrom = LocalDate.now().minusDays(daysFrom);
-        LocalDate dateTo = LocalDate.now();
+        var result = newsApiClient.get(
+                params.subject(),
+                fromDate.format(DATEFORMAT_PATTERN),
+                toDate.format(DATEFORMAT_PATTERN),
+                SORT_BY,
+                apiKey);
 
-        URI uri = UriComponentsBuilder
-                .fromUriString(urlBase)
-                .queryParam("q",subject)
-                .queryParam("from", dateFrom.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .queryParam("to", dateTo.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .queryParam("sortBy", "popularity")
-                .queryParam("apiKey", apiKey)
-                .buildAndExpand(urlParam)
-                .encode(StandardCharsets.UTF_8)
-                .toUri();
+        return tratarResponse(params, result);
+    }
 
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<ResultInfoDto> response = restTemplate
-                .exchange(
-                        URLDecoder.decode(uri.toString(), StandardCharsets.UTF_8),
-                        HttpMethod.GET,
-                        null,
-                        new ParameterizedTypeReference<ResultInfoDto>(){});
+    private <T> T parse(String body, TypeReference<T> type) throws JsonProcessingException {
+        return mapper.readValue(body, type);
+    }
 
-        if(response.getStatusCode().equals(HttpStatus.OK)){
-            ResultInfoDto dto = response.getBody();
-            dto.setFont(this.getClass().getName());
-            dto.setDt(LocalDateTime.now());
-            dto.setSubjectSearch(subject);
-            return dto;
+    private ResponseDto tratarResponse(ParamsDto params, ResponseEntity<String> response) {
+        var result = ResponseDto.builder()
+                .subject(params.subject())
+                .startDate(params.startDate())
+                .endDate(params.endDate())
+                .build();
+
+        try {
+            var body = response.getBody();
+            if (response.getStatusCode() == HttpStatus.OK) {
+                var articles = parse(body, new TypeReference<ArticlesDto>(){});
+                result.setArticles(articles.getArticles());
+                result.setMessage(String.format("Artigos encontrados: %d", articles.getTotalResults()));
+            }
+            else {
+                var error = parse(body, new TypeReference<ErrorDto>(){});
+                result.setMessage(String.format("Erro ao buscar artigos: %s", error.getMessage()));
+            }
+        } catch (JsonProcessingException e) {
+            result.setMessage(String.format("Erro ao converter dados: %s", e.getMessage()));
         }
-        else{
-            return ResultInfoDto.builder()
-                    .font(this.getClass().getName())
-                    .totalResults(0)
-                    .subjectSearch(subject)
-                    .dt(LocalDateTime.now())
-                    .build();
-        }
+
+        return result;
     }
 }

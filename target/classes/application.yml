@@ -1,7 +1,0 @@
-server:
-  port: 8989
-app:
-  newsapi:
-    daysFrom: 0
-    daysTo: 0
-    apiKey: 3add05dbb51b4b6dbfa9ca807f5f4bef

@@ -1,6 +1,14 @@
 server:
-  port: 8989
+  port: ${PORT:8989}
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      adjust-dates-to-context-time-zone: false
+    default-property-inclusion: non_null
+    time-zone: UTC
 app:
   newsapi:
-    daysFrom: 0
-    apiKey: 3add05dbb51b4b6dbfa9ca807f5f4bef
+    daysFrom: ${NEWS_API_DAYS:1}
+    apiKey: ${NEWS_API_KEY:}

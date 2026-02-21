@@ -1,9 +1,10 @@
 package br.com.vtracker.appsearch.service;
 
-import br.com.vtracker.appsearch.dto.ResultInfoDto;
+import br.com.vtracker.appsearch.dto.ParamsDto;
+import br.com.vtracker.appsearch.dto.ResponseDto;
 
 public interface ISearchService {
 
-    ResultInfoDto searchAnySubject(String subject);
+    ResponseDto searchAnySubject(ParamsDto subject);
 
 }

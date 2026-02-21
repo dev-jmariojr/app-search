@@ -1,42 +1,45 @@
 package br.com.vtracker.appsearch.controller;
 
-import br.com.vtracker.appsearch.dto.ResultInfoDto;
+import br.com.vtracker.appsearch.dto.ParamsDto;
+import br.com.vtracker.appsearch.dto.ResponseDto;
 import br.com.vtracker.appsearch.service.ISearchService;
-import br.com.vtracker.appsearch.service.SearchServiceFakeNews13;
-import br.com.vtracker.appsearch.service.SearchServiceFakeNews22;
 import br.com.vtracker.appsearch.service.SearchServiceNewsApi;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/v1")
+@Validated
 public class SearchController {
 
     private final ISearchService serviceNewsApi;
-    private final ISearchService serviceFakeNews13;
-    private final ISearchService serviceFakeNews22;
 
-    public SearchController(SearchServiceNewsApi serviceNewsApi, SearchServiceFakeNews22 serviceFakeNews22, SearchServiceFakeNews13 serviceFakeNews13) {
+    public SearchController(SearchServiceNewsApi serviceNewsApi) {
         this.serviceNewsApi = serviceNewsApi;
-        this.serviceFakeNews13 = serviceFakeNews13;
-        this.serviceFakeNews22 = serviceFakeNews22;
     }
 
     @ResponseStatus(HttpStatus.OK)
     @GetMapping("/search")
-    public List<ResultInfoDto> search(@RequestParam String value){
-
-        List<ResultInfoDto> list = new ArrayList<>();
-        list.add(serviceFakeNews13.searchAnySubject(value));
-        list.add(serviceFakeNews22.searchAnySubject(value));
-        list.add(serviceNewsApi.searchAnySubject(value));
-
-        return list;
+    public ResponseEntity<ResponseDto> search(
+            @Size(min = 3, max = 10, message = "Informe um valor para o 'subject' da pesquisa entre {min} e {max} caracteres")
+            @NotNull(message = "Informe o 'subject' para realizar a pesquisa")
+            @RequestParam String subject,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false)
+            LocalDate startDate,
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            @RequestParam(required = false)
+            LocalDate endDate)
+    {
+        var params = new ParamsDto(subject, startDate, endDate);
+        return ResponseEntity.ok(serviceNewsApi.searchAnySubject(params));
     }
 
 }
