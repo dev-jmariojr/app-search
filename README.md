@@ -22,11 +22,12 @@ A resposta é uma lista de objetos JSON, onde cada objeto representa uma notíci
 * `urlToImage`: O link para a imagem associada à notícia (se disponível).
 
 
-### Tecnologias Utilizadas
+### Tecnologias/ Frameworks Utilizados
 * Java 17
 * Spring Boot
 * Maven
 * Feign Client
+* JUnit/ Mockito (para testes)
 
 ### Execução (Ambiente Local)
 Para executar a API, siga os passos abaixo:
