@@ -1,12 +1,18 @@
 package br.com.vtracker.appsearch.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ArticlesDto {
 
     private String status;
@@ -14,6 +20,9 @@ public class ArticlesDto {
     private List<Article> articles;
 
     @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @Builder
     public static class Article {
 
         private Source source;
@@ -27,8 +36,11 @@ public class ArticlesDto {
     }
 
     @Data
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private static class Source {
+    public static class Source {
         private String id;
         private String name;
     }
