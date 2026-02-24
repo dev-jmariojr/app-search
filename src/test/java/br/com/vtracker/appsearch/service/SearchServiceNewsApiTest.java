@@ -1,7 +1,7 @@
 package br.com.vtracker.appsearch.service;
 
 import br.com.vtracker.appsearch.dto.ParamsDto;
-import br.com.vtracker.appsearch.resource.NewsApiClient;
+import br.com.vtracker.appsearch.client.NewsApiClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

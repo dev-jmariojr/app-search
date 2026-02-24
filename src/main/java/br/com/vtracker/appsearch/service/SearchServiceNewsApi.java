@@ -4,7 +4,7 @@ import br.com.vtracker.appsearch.dto.ArticlesDto;
 import br.com.vtracker.appsearch.dto.ErrorDto;
 import br.com.vtracker.appsearch.dto.ParamsDto;
 import br.com.vtracker.appsearch.dto.ResponseDto;
-import br.com.vtracker.appsearch.resource.NewsApiClient;
+import br.com.vtracker.appsearch.client.NewsApiClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

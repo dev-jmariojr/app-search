@@ -1,4 +1,4 @@
-package br.com.vtracker.appsearch.resource;
+package br.com.vtracker.appsearch.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
